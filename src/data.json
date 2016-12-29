@@ -1,0 +1,61 @@
+[{
+    "firstName": "Daniel",
+    "lastName": "Díaz",
+    "sex": "male",
+    "age": 24,
+    "likesCookies": true
+}, {
+    "firstName": "Rose",
+    "lastName": "Red",
+    "sex": "female",
+    "age": 39,
+    "likesCookies": false
+}, {
+    "firstName": "John",
+    "lastName": "Doe",
+    "sex": "male",
+    "age": 45,
+    "likesCookies": false
+}, {
+    "firstName": "Vladimir",
+    "lastName": "Vygodsky",
+    "sex": "male",
+    "age": 27,
+    "likesCookies": false
+}, {
+    "firstName": "Foo",
+    "lastName": "Bar",
+    "sex": "female",
+    "age": 32,
+    "likesCookies": true
+}, {
+    "firstName": "María",
+    "lastName": "Delaoh",
+    "sex": "male",
+    "age": 52,
+    "likesCookies": false
+}, {
+    "firstName": "Victoria",
+    "lastName": "Haskell",
+    "sex": "female",
+    "age": 23,
+    "likesCookies": true
+}, {
+    "firstName": "François",
+    "lastName": "Beaulieu",
+    "sex": "female",
+    "age": 42,
+    "likesCookies": false
+}, {
+    "firstName": "Amalie",
+    "lastName": "Baumann",
+    "sex": "female",
+    "age": 28,
+    "likesCookies": true
+}, {
+    "firstName": "Rachel",
+    "lastName": "Scott",
+    "sex": "male",
+    "age": 23,
+    "likesCookies": true
+}]

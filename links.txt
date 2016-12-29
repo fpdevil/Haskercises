@@ -1,0 +1,12 @@
+CMSC-16100
+Honors Introduction to Programming http://cmsc-16100.cs.uchicago.edu/2016/
+
+CMSC-22311 (follow-on course to CMSC-16100)
+Functional Systems in Haskell http://cmsc-22311.cs.uchicago.edu/2015/
+
+
+All New cis194
+http://cis.upenn.edu/~cis194/fall16/
+
+
+http://okmij.org/ftp/README.html
