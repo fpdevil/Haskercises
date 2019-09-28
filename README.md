@@ -2,41 +2,69 @@
 
 ### Weak Head Normal Form
 
-* While simplifying an expression, a Normal Form (NF) is a form where no further simplification can be performed; the expressions form reached its final stage and cannot be simplified any more.
+* While simplifying an expression, a Normal Form (`NF`) is a form
+  where no further simplification can be performed; the expressions of
+  this form has reached its final stage and cannot be simplified any more.
 
-* `Haskell` tries to evaluate an input expression into a NF.
+* `Haskell` tries to evaluate an input expression into a `NF`.
 
-* Certain expressions do not have a Normal Form; for instance the `haskell` definition `undefined = undefined` when simplified goes into an infinite loop as there is no final stage for it.
+* Certain expressions do not have any `Normal Form`; for instance, the
+  `Haskell` definition of the form `undefined = undefined` when
+  simplified falls into an infinite loop as there is no final stage for it.
 
-* The expressions evaluation rule has a significant effect on simplification. As for the simplification to reach a final stage or stop at some point depends on the evaluation rule.
-for instance `const x = \y -> x` returns a constant function by ignoring it's argument `y` thus returning `x` always.
-Strict languages say "*the argument expression shall be evaluated before the function call, and the called function shall receive the obtained value as its parameter*".
-This is called `Call By Value`. With `CBV` an expression like `const 0 undefined` would loop forever as it will try to evaluate the arguments forever.
-Lazy languages like `haskell` say "*the called function shall receive the unevaluated argument expression as its parameter*".
-This is called `Call By Need`. With `CBN` an expression like `const 0 undefined` can be as follows
-    ```haskell
-    const 0 undefined = (\x -> 0) undefined
-    				  = 0
-    ```
-* The called function can decide if it needs the value of the argument. For instance, if the value is a list, the function can decide how many elements it needs to have.
+* The expressions evaluation rule has a significant effect on its
+simplification. As for the simplification to reach a final stage or
+stop at some point, depends on the evaluation rule.
+For instance `const x = \y -> x` returns a constant function by
+ignoring it's argument `y` thus returning `x` always. Strict languages
+say "*the argument expression shall be evaluated before the function
+call, and the called function shall receive the obtained value as its
+parameter*".
 
-* In `haskell` yf the code is written as one long line (with the {;}s) then we always simplify at the first possible position. That position is called the `Head` and the end result would `Head NF` or `HBF`
+This is called `Call By Value`. With `CBV`, an expression like `const
+0 undefined` would loop forever as it will try to evaluate the
+arguments forever.
 
-* Functional programming languages stop as soon as the overall shape of the whole expression is not a call, but something like `\f -> f x` and evaluating the argument `x` does not make sense any more, because we do not know the function `f` using it anyway. This is called `Weak HNF` or `WHNF`.
-
-#### some examples
-
-#### Haskell Type Class syntax
+Lazy languages like `haskell` say "*the called function shall receive
+the unevaluated argument expression as its parameter*". This is called
+`Call By Need`. With `CBN`, an expression like `const 0 undefined` can
+be as follows
 
 ```haskell
+    const 0 undefined = (\x -> 0) undefined
+    				  = 0
+```
+
+* The called function can decide if it needs the value of the
+  argument. For instance, if the value is a list, the function can
+  decide how many elements it needs to have.
+
+* In `haskell` yf the code is written as one long line (with the {;}s)
+  then we always simplify at the first possible position. That
+  position is called the `Head` and the end result would `Head NF` or `HBF`
+
+* Functional programming languages stop as soon as the overall shape
+  of the whole expression is not a call, but something like `\f -> f
+  x` and evaluating the argument `x` does not make sense any more,
+  because we do not know the function `f` using it anyway. This is
+  called `Weak HNF` or `WHNF`.
+
+#### some code examples
+
+#### Haskell(s) Type Class syntax
+
+```haskell
+-- data type definition
 data Choice = Definitely
             | Possibly
             | NoWay
             deriving ( Eq, Ord, Enum, Bounded, Show, Read )
 
+-- class definition
 class Equals a where
   isEqual :: a -> a -> Bool
 
+-- making a data type an instance of the class
 instance Equals Choice where
   isEqual Definitely Definitely = True
   isEqual Possibly   Possibly   = True
@@ -55,10 +83,10 @@ instance Eq Choice where
   _          == _          = False
 ```
 
->*fibonacci numbers using pairs of lazy list*
+>*Define Fibonacci numbers using pairs of lazy list*
 
 ```haskell
-fibs :: Num a -> [a]
+fibs :: Num a => [a]
 fibs = map snd $ iterate (\(x, y) -> (y, x + y)) (0, 1)
 
 -- λ> take 10 fibs
@@ -81,7 +109,10 @@ fib = 0 : 1 : zipWith (+) fib (tail fib)
 
 #### Folding
 
-`haskell` provides folding of a data structure from either left or right. The standard `haskell` library defines the right fold as similar to the following
+`Haskell` provides folding of a data structure from either the `Left`
+or `Right`. The standard `haskell` library defines functions for both
+folding from the Right as well as Left. The right fold is defined
+similar to the following
 
 ```haskell
 foldr :: (a -> b -> b) -> b -> [a] -> b
@@ -90,7 +121,12 @@ foldr f acc xs = case xs of
                       (y : ys) -> f y (foldr f acc ys)
 
 ```
-The `foldr` function takes a binary function and an identity value along with a list and reduces the list. It can be represented as a binary tree as follows for a list `[x1, x2, x3]` and a function `fn` with an initial value as `u`
+
+The `foldr` function takes a binary function and an `identity` value
+along with a list and reduces the list to a single value of the type
+same as the `identity`. It may be depcited pctorially as a binary tree
+as follows, for a list of values `[x1, x2, x3]` and a function `fn`
+with an initial value as `u` serving as `identity`.
 
 ```haskell
 
@@ -105,7 +141,10 @@ foldr fn u [x1, x2, ..., xn] = x1 `fn` (x2 `fn` (...(xn `fn` u)...))
                       x3     u
 ```
 
-The `foldl` function does essentiall the same except that it folds or reduces the list to the left. For a function `fn` and initial identity element `u` over the list `[x1,x2,x3]`, we can represent foldl as follows
+The `foldl` function does essentially the same, except that it folds
+or reduces the list to the left side. For a function `fn` and some
+initial `identity` element `u` over the list  of values `[x1,x2,x3]`,
+we may represent foldl definition pictorially as follows.
 
 ```haskell
 
@@ -129,7 +168,8 @@ foldl f acc xs = case xs of
                       (y : ys) -> foldl f (f acc y) ys
 ```
 
-We can have the below identity between the left fold and right fold
+We can have the below identity defining a relationship between the
+left fold and right fold functions.
 
 ```haskell
 foldr op u xs == foldl (flip op) u (reverse xs)
@@ -137,10 +177,11 @@ foldr op u xs == foldl (flip op) u (reverse xs)
 
 #### function composition (.)
 
-> Mathematically composition of functions is denoted by a `o`.
+> Mathematically composition of functions is denoted by a circle `o`.
 > So, `(f o g)(x) = f(g(x))`
 
-The same can be represented in `haskell` using the `(.)` operator defined as below.
+The same can be represented in `haskell` using the standard `(.)`
+operator defined in the `Haskell` language as below.
 
 ```haskell
 (.) :: (b -> c) -> (a -> b) -> a -> c
@@ -150,13 +191,18 @@ f . g = \x -> f (g x)
 ### `Functors`
 -----------------------------
 
-A `Functor` type class is for the things, which can be mapped over. In normal terms we can say that a `Functor` applies a normal function to a wrapped value to return a wrapped value.
-Here is how a `Functor` class is defined in the standard `haskell` library.
+A `Functor` type class is for the things, which can be mapped over. In
+normal terms we can say that a `Functor` applies a normal function to
+some wrapped value in order to return a new wrapped value.
+
+Here is how the `Functor` class is defined in the standard `haskell` library.
 
 ```haskell
 class Functor (f :: * -> *) where
 	fmap :: (a -> b) -> f a -> f b
 ```
+
+The type of the wrapper should be `* -> *`
 
 > A `Functor` class takes a type constructor that takes one type. All
 > instances of the `Functor` class should satisfy the below two laws:
@@ -166,10 +212,11 @@ fmap id == id
 fmap (f . g) == fmap f . fmap g
 ```
 
-*All the instances of `Functor` for `lists`, `Maybe` and `IO` satisfy the above laws.*
+*All the instances of `Functor` for standard data types like the
+`Lists`, `Maybe`, `Either` and `IO` satisfy the above laws.*
 
-> Here is how popular  structures like `lists`, `Maybe`, `Either` and
-> `->` are instances of the `Functor` type class
+> Here is how the popular  structures like `lists`, `Maybe`, `Either` and
+> `->` are made instances of the `Functor` type class
 
 ```haskell
 -- list as a functor instance
@@ -209,7 +256,8 @@ instance Functor ((->) r) where
 ```
 
 
-*With (`->`) instance of `Functor` we can have the below interesting points*
+*With (`->`) being an instance of the `Functor` class, we can have
+some of the below interesting points*
 
 >`fmap :: (a -> b) -> f a -> f b`
 
@@ -217,7 +265,7 @@ instance Functor ((->) r) where
 
 >`fmap :: (a -> b) -> ((->) r a) -> ((->) r b)`
 
-*`((->) r a)` and `((->) r b)` can be written as `r -> a` and `r -> b`*
+*But `((->) r a)` and `((->) r b)` can be written as `r -> a` and `r -> b`*
 
 >`fmap :: (a -> b) -> (r -> a) -> (r -> b)`
 
@@ -231,22 +279,31 @@ instance Functor ((->) r) where
 
 ### `Applicative`
 
-In `Applicatives`  we apply an  already wrapped  function over a  wrapped value.
-They are defined in the  package `Control.Applicative`. An `Applicative` has the
-following general type signature.
+In `Applicatives`  we apply an  already wrapped  function over another
+wrapped value. `Applicatives` are defined in the standard `haskell`
+library package `Control.Applicative`. An `Applicative` has the
+following general class signature.
 
 ```haskell
 class Functor f => Applicative f where
 	pure :: a -> f a
 	(<*>) :: f (a -> b) -> f a -> f b
 ```
-Here `pure` which has the form of `a -> f a` is actually wrapping a
-normal value with a default minimal context. This is called `lifting`
-as its actually lifting a simple value to a wrapped value as defined.
+
+As per the definition, for a type to be an `Applicative`, it first
+needs to be a `Functor`.
+
+The `pure` in the class definition, which has the form of `a -> f a`
+is actually wrapping a normal value with a default minimal
+context. This is called as `lifting` as its actually is lifting a
+simple value to a wrapped value as defined.
 
 For a function to act as an `Appllicative` it first needs to be a `Functor`.
 
->*Instances of `Applicative`*
+>*Instances of the `Applicative`*
+
+Standard data types like `Maybe`, `Either` etc., which are all
+`Functors` may be made instances of the `Applicative` class.
 
 ```haskell
 -- Maybe as an Applicative
@@ -259,18 +316,23 @@ instance Applicative Maybe where
 ```
 
 > *Some important layouts*
-> an infix version of the `fmap` is `<$>` and is defined as below
+> an infix version of the `fmap` is `<$>` and the same is defined as
+> below
 
 ```haskell
 (<$>) :: (a -> b) -> f a -> f b
 f <$> x = fmap f x
 ```
+
 > based on the above...
+> `Maybe` as an `Applicative`
 
 ```haskell
-fmap f x = pure f <*> x = f <$> x = (<*>) . pure
+fmap f x = pure f <*> x
+         = f <$> x
+         = (<*>) . pure
 
--- the last one due to eta reduction
+-- the last one due to ETA reduction
 ```
 
 > `List` as an `Applicative` instance
@@ -302,7 +364,12 @@ instance Applicative ((->) r) where
 
 > `ZipList` as an `Applicative` instance
 
-`List` was already made an instance of `Applicative`. But if while combining two or more lists using a binary or a higher functon, if we want to apply the function to each element like first element of list1 with first element of list2 and so on we need to define in an alternative way. `ZipList` is there for the same purpose.
+`List` was already made an instance of the `Applicative`. But if
+during combination of two or more lists using some binary or another
+higher order functon, if we want to apply the function to each element
+like first element of list1 with first element of list2 and so on, we
+first need to define the list type in an alternative way. And
+`ZipList` is there for exactly the same purpose.
 
 ```haskell
 instance Applicative ZipList where
@@ -311,7 +378,8 @@ instance Applicative ZipList where
 
 newtype ZipList a = ZipList { getZipList :: [a] }
 ```
-#### *`Applicative` laws*
+
+#### *`Applicative` laws to be obeyed*
 
 ```haskell
 
@@ -326,13 +394,16 @@ u <*> pure y = pure ($ y) <*> u 				-- interchange
 In the  abstract mathematical sense,  we can  define a `Group`  `G` as a  set of
 un-ordered unique elements associated with a binary operation such that
 
+- for every element x, y in the `Group G`, `(x . y)` is also an element of `Group G`
+- for every element x, y, z in the `Group G`, `x . (y . z) = (x . y)
+  . z` there is some element `e` (referred to as an `identity`
+  element) in the `Group G` such that for any element `x` in the
+  `Group G`, `x . e = e . x = x`.
+-  for any `x` in `Group G`, there exists some element `y` which
+   satisfies the relation `x . y = y . x = e`. That is `y` is an
+   inverse of `x`.
 
-- for every element x, y in the Group G, `(x . y)` is also an element of G
-- for every element x, y, z in the Group G, `x . (y . z) = (x . y) . z`
-- there is some element e (referred to as identity element) in Group G such that for any element x in the Group G, `x . e = e . x = x`.
--  for any x in G, there exists some element y which satisfies the relation `x . y = y . x = e`. That is y is an inverse of x.
-
-In haskell such a group can be defined in terms of type class as below
+In `haskell` such a group can be defined in terms of a type class as below
 
 ```haskell
 class Group g where
@@ -344,23 +415,33 @@ class Group g where
     inverse :: g -> g
 ```
 
-Now whenever we want to create an instance of such a group, we need to verify that the following laws hold good.
->*the below is not a valid haskell code, but just a way of expressing the above laws*
+Now whenever we want to create an instance of such a group, we need to
+verify that the following laws hold good.
+
+>*the below is not a valid `haskell` code, but is just a simplified
+>means of expressing the previously defined laws*
 
 ```haskell
 -- binary associative operation
 forall x y z => x `bin` (y `bin` z) = (x `bin` y) `bin` z
+
 -- an identity
 forall x => identity `bin` x == x `bin` identity == x
+
 -- inverse of every element
-forall x => inverse x `bin` x == x `bin` inverse x == identity
+forall x => (inverse x) `bin` x == x `bin` (inverse x) == identity
 ```
 
-For the actual real world use in haskell we prefer a much simplicied abstract concept than a group which is a Monoid.
+For the actual real world usage in `haskell` we prefer a much
+simplified abstract concept than a `Group` which is called a `Monoid`.
 
-In abstract matchematics a `monoid` is regarded as an algebraic datastructure with a single binary associative operation and an identity element. Monoids are an extension of the Semigroup with identity.
+In abstract mathematics a `Monoid` is regarded as an algebraic data
+structure with a single binary associative operation and an identity
+element. `Monoids` are an extension to the `Semigroup(s)` with `identity`.
 
-If `S` is a Set and `.` is a binary operation such that `S X S -> S`, then `S` together with `.` qualifies as a Monoid if it satisfies the below laws.
+If `S` is some Set and `.` is some binary function or operation, such
+that `S . S -> S`, then `S` together with `.` qualifies as a `Monoid`
+if it satisfies the below laws.
 
 - Associativity
 - Identity element
@@ -371,9 +452,12 @@ A `monoid` in which each each element has an inverse is called a `group`.
 
 ### `Monoids`
 
-`Monoids` are types with an associative binary operation which have an identity. `Monoid` class is defined in the standard `haskell` as below
+`Monoids` are types with an associative binary operation which have an
+identity element. `Monoid` class is defined in the standard `haskell`
+library as below
 
->*Note: if a `Monoid` does not satisfy the identity, then it is called a `Semigroup`. It exists in the `Data.Semigroup` package*
+>*Note: if a `Monoid` does not satisfy the identity law, then it is called
+>a `Semigroup`. It exists in the `haskell` package `Data.Semigroup`*
 
 ```haskell
 class Monoid m where
@@ -383,7 +467,8 @@ class Monoid m where
 	mconcat = foldr mappend mempty
 ```
 
-`Monoids` are defined in the package `Data.Monoid`. The infix version of the function `mappend` is `(<>)` and is defined as below
+`Monoids` are defined in the standard package `Data.Monoid`. The
+`infix` version of the function `mappend` is `(<>)` and is defined as below
 
 ```haskell
 infix r6 <>
@@ -404,7 +489,7 @@ x `mappend` mempty = x
 (x `mappend` y) `mappend` z = x `mappend` (y `mappend` z)
 ```
 
-> *instances of `monoid`*
+> *Instances of `monoid`*
 
 ```haskell
 -- list as monoid
@@ -424,24 +509,27 @@ instance (Monoid a) => Monoid (Maybe a)	where
 
 They wrap  Maybe values to provide a new `monoid` instance.
 
-* The `First` wrapper returns the left-most or first non Nothing value.
+* The `First` wrapper returns the left-most or first non `Nothing` value.
 
-* The `Last` wrapper returns the right-most or last non Nothing value.
+* The `Last` wrapper returns the right-most or last non `Nothing` value.
 
-Here is how they are defined under `Data.Monoid`
+Here is how they are defined under the package `Data.Monoid`
 
 ```haskell
 newtype First a = First { getFirst :: Maybe a }
 				  deriving (Eq, Ord, Show, Read)
 
+-- make First an instance of Monoid
 instance Monoid (First a) where
   mempty                         = First Nothing
   z@(First (Just _)) `mappend` _ = z
   First Nothing `mappend` z      = z
 
+
 newtype Last a = Last { getLast :: Maybe a }
 				 deriving (Eq, Ord, Show, Read)
 
+-- make Last an instance of Monoid
 instance Monoid (Last a) where
   mempty                        = Last Nothing
   _ `mappend` z@(Last (Just _)) = z
@@ -460,9 +548,9 @@ instance Monoid Ordering where
 	GT `mappend` _ = GT
 ```
 
-### `Monads`
+### `Monad`
 
-Here is the class definition of `Monad`
+Here is the class definition for `Monad`
 
 `Monad` is  a concept from a  branch of mathematics known  as category
 theory. Monads are mathematical structures which can abstractly handle

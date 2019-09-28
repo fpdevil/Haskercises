@@ -80,8 +80,9 @@ instance Num NaturalNumber where
   x - Zero = x
   _ * Zero = Zero
   x * F y  = x * y + x
-  abs      = undefined
-  signum   = undefined
+  abs      = id
+  signum Zero = Zero
+  signum _    = F Zero
   fromInteger x
     | x > 0     = F (fromIntegral (x - 1))
     | x == 0     = Zero
@@ -154,3 +155,31 @@ main = do
     [x] | all C.isDigit x -> rotStdIn (read x)
         | otherwise       -> usage
     _  -> usage
+
+-----------------------------------------------------------------------------------
+multipleOf :: Integer -> Integer -> Bool
+multipleOf x y = x `mod` y == 0
+
+multiples :: Integer -> String
+multiples n
+  | multipleOf n 2 = show n ++ " is multiple of 2"
+  | multipleOf n 3 = show n ++ " is multiple of 3"
+  | multipleOf n 5 = show n ++ " is multiple of 5"
+  | otherwise      = show n ++ " is a beautiful number"
+
+-- infinite number range
+data InfiniteNum a = MinusInfinity
+                   | Number a
+                   | PlusInfinity
+                    deriving (Show, Eq, Ord)
+
+-- compare numbers with infinity
+infMax :: (Ord a) => InfiniteNum a -> InfiniteNum a -> InfiniteNum a
+infMax MinusInfinity x       = x
+infMax x MinusInfinity       = x
+infMax PlusInfinity _        = PlusInfinity
+infMax _ PlusInfinity        = PlusInfinity
+infMax (Number x) (Number y) = Number (x `max` y)
+
+-- λ> scanr infMax MinusInfinity $ map Number [1..5]
+-- [Number 5,Number 5,Number 5,Number 5,Number 5,MinusInfinity]

@@ -18,8 +18,8 @@ import           Control.Monad.Writer
 import           Data.Monoid          ()
 import           System.Random
 -----------------------------------------------------------------------------------
--- simulating a Writer Monad
--- learning from LYAH
+-- | simulating a Writer Monad
+--   learning from LYAH
 -----------------------------------------------------------------------------------
 isBig :: Int -> (Bool, String)
 isBig x = if x > 9 then (True, show x ++ " is greater than 9") else (False, " less than 9")
@@ -52,8 +52,12 @@ addDrink _         = ("Hot Water", Sum 3)
 -- λ> ("cereals", 10) `applyLog` addDrink `applyLog` addDrink
 -- ("Hot Water",Sum {getSum = 25})
 
+powerset :: [a] -> [[a]]
+powerset []       = [[]]
+powerset (x : xs) = powerset xs >>= \set -> [set, x : set]
+
 -----------------------------------------------------------------------------------
--- WRITER MONAD
+-- | WRITER MONAD
 -----------------------------------------------------------------------------------
 {-
 definition of the Writer Monad in standard libraries
@@ -76,7 +80,7 @@ some one liners for testing
 -}
 
 -----------------------------------------------------------------------------------
--- logging multiplication of numbers
+-- | logging multiplication of numbers
 logNumber :: Int -> Writer [String] Int
 logNumber x = writer (x, ["Received number: " ++ show x])
 
@@ -87,7 +91,7 @@ multiplyWithLog x y = do
    tell ["Multiplying the nums " ++ show x ++ " and " ++ show y]
    return (a * b)
 
--- gcd of numbers with logging
+-- | gcd of numbers with logging
 gcdW :: Int -> Int -> Writer [String] Int
 gcdW a b
    | b == 0 = do
@@ -110,7 +114,7 @@ gcdW a b
 -- "completed with 1"
 
 
--- filtering small elements
+-- | filtering small elements
 keepSmall :: Int -> Writer [String] Bool
 keepSmall x
   | x < 5 = do
@@ -131,7 +135,7 @@ keepSmall x
 --"21 is too large, throwing away..."
 --"Keeping 0"
 
--- binary power
+-- | binary power
 binpow :: Int -> Int -> Writer [String] Int
 binpow 0 _ = return 1
 binpow n x
@@ -151,7 +155,7 @@ binpow n x
 -- "Square 4"
 
 
--- simple fibonacci
+-- | simple fibonacci with logger
 fibw :: Int -> Writer [String] Int
 fibw n
    | n < 2 = do
@@ -181,7 +185,7 @@ fibw n
 -- "fibw 5 = 8"
 
 -----------------------------------------------------------------------------------
--- READER MONAD
+-- | READER MONAD
 -----------------------------------------------------------------------------------
 {-
 Reader monad is for computations which read values from a shared environment.
@@ -220,7 +224,7 @@ runDisney = runReader md "Who is this?"
 -- Who is this? This is Mickey.
 -- Who is this? This is Donald.
 -----------------------------------------------------------------------------------
--- STATE MONAD
+-- | STATE MONAD
 -----------------------------------------------------------------------------------
 {-
 State Monad  is similar  to the  above, but  it can  Write as  well as
@@ -293,7 +297,7 @@ stackOp = do
 randomSt :: (RandomGen g, Random a) => State g a
 randomSt = state random
 
--- coin throw using the stateful randomness
+-- | coin throw using the stateful randomness
 coins :: State StdGen (Bool, Bool, Bool)
 coins = do
    x <- randomSt
@@ -304,7 +308,8 @@ coins = do
 -- λ> runState coins (mkStdGen 1001)
 -- ((True,False,False),460862966 2103410263)
 
--- thread random generator state through multiple calls to the generation function
+-- | thread random generator state through multiple calls
+--   to the generation function
 data MT = MT Int Bool Char Int deriving Show
 
 getRand :: (Random a) => State StdGen a
@@ -317,7 +322,7 @@ getRand = do
 -- λ> runState getRand (mkStdGen 99)
 -- (6777721729736976246,1494795594 2103410263)
 
--- get random with bounds
+-- | get random with bounds
 getR :: (Random a) => (a, a) -> State StdGen a
 getR bounds = do
    gen <- get
@@ -336,26 +341,26 @@ mkRandValue = runState $ do
 -- λ> mkRandValue  (mkStdGen 1001)
 -- (MT 36 False 'o' (-18),529366043 1872071452)
 -----------------------------------------------------------------------------------
--- generating a stream of unique labels
--- Suppose  we  need to  generate  labels  in  code, for  instance  while
--- performing operations on an abstract  syntax tree. Each label needs to
--- be unique,  and we need  labels in  various functions. In  haskell, we
--- cannot just mutate some counter-variable.
+-- | generating a stream of unique labels
+--   Suppose  we  need to  generate  labels  in  code, for  instance  while
+--   performing operations on an abstract  syntax tree. Each label needs to
+--   be unique,  and we need  labels in  various functions. In  haskell, we
+--   cannot just mutate some counter-variable.
 
--- state is managed here, which indicates that it contains an integer
+-- | state is managed here, which indicates that it contains an integer
 type Label = State Int
 
--- increment the internal state and return a label
+-- | increment the internal state and return a label
 inc :: Label String
 inc = state $ \x -> let y = x + 1
                    in ("$" ++ show y, y)
 
 
--- generate a pair of lables by lifting the inc
+-- | generate a pair of lables by lifting the inc
 pairs :: Label (String, String)
 pairs = (,) <$> inc <*> inc
 
--- function for generating the labels
+-- | function for generating the labels
 labels :: Bool -> Label [(String, String)]
 labels predicate = func <$> pairs
                         <*> pairs
@@ -365,7 +370,7 @@ labels predicate = func <$> pairs
                                       then [x, z]
                                       else [x, y, z]
 
--- run the labels
+-- | run the labels
 runLabels :: IO ()
 runLabels = do
    putStrLn "Enter `True` or `False`..."
@@ -381,6 +386,7 @@ runLabels = do
 -- False
 -- [("$1","$2"),("$3","$4"),("$5","$6")]
 
+-- | Pairs of even integers
 evenPair :: (Alternative m, Monad m, Integral a, Integral b) => m a -> m b -> m (a, b)
 evenPair a b = a >>= \x ->
                    b >>= \y ->

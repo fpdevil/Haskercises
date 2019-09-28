@@ -9,22 +9,22 @@ Description: A simple binary tree datastructure in Haskell
 
 module Tree
 (
-singleton,
-insert2tree,
-list2tree,
-tree2list,
-invertTree,
-treeMap,
-treeElement,
-height,
-size,
-preorder,
-postorder,
-inorder,
-showtot,
-showtot',
-uptoTreeDepth,
-nullTree
+    singleton,
+    insert2tree,
+    list2tree,
+    tree2list,
+    invertTree,
+    treeMap,
+    treeElement,
+    height,
+    size,
+    preorder,
+    postorder,
+    inorder,
+    showtot,
+    showtot',
+    uptoTreeDepth,
+    nullTree
 )
 where
 

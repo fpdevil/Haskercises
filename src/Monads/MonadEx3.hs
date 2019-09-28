@@ -73,6 +73,8 @@ newtype State s a = State { runState :: s -> (a, s) }
 -- with newtype definition, the runState will be as follows
 -- runState :: State s a -> s -> (a, s)
 --
+-- its analgous to runState (State f) s =  f s
+--
 -- here is how the flow of state can be depicted diagrammatically
 --
 --                    input
@@ -202,6 +204,7 @@ modify f = do
 -----------------------------------------------------------------------------------
 -- The function `evalState` will evaluate a stateful computation with the
 -- given initial state and returns the final value , discarding final State
+-- evalState (State f) s = first (f s)
 -----------------------------------------------------------------------------------
 evalState :: State s a -> s -> a
 evalState ma s = fst (runState ma s)
@@ -209,7 +212,8 @@ evalState ma s = fst (runState ma s)
 -----------------------------------------------------------------------------------
 -- The function `execState` will evaluate a stateful computation with the
 -- given initial state and returns the final state, discarding final value
--------------------------------------------------------------------------f----------
+-- execState (State f) s = second (f s)
+-----------------------------------------------------------------------------------
 execState :: State s a -> s -> s
 execState ma s = snd (runState ma s)
 

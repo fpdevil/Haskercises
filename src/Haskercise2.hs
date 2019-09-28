@@ -125,6 +125,13 @@ finiteRandoms n gen = (value : rest, finalGen)
               (value, newGen) = random gen
               (rest, finalGen) = finiteRandoms (n - 1) newGen
 
+-- max, min range elements from a list
+maxmin :: (Ord a) => [a] -> (a, a)
+maxmin [x]      = (x, x)
+maxmin (x : xs) = (if x > max_xs then x else max_xs, if x < min_xs then x else min_xs)
+    where
+        (max_xs, min_xs) = maxmin xs
+
 -- user guess example
 guess :: IO ()
 guess = do
@@ -234,24 +241,23 @@ fibPair n
 
 fastFib :: (Integral a) => a -> a
 fastFib = fst . fibPair
-
 -----------------------------------------------------------------------------------
--- a function that takes a list of applicatives and returns an applicative that has
--- a list as its result value
+-- | a function that takes a list of applicatives and returns an
+--   applicative that has a list as its result value
 sequenceA :: (Applicative f) => [f a] -> f [a]
 -- sequenceA []       = pure []
 -- sequenceA (x : xs) = (:) <$> x <*> sequenceA xs
 -- re-writing using foldr
 sequenceA = foldr (\x -> (<*>) ((:) <$> x)) (pure [])
 
--- using liftA2
+-- | using liftA2
 sequenceA' :: (Applicative f) => [f a] -> f [a]
 sequenceA' = foldr (liftA2 (:)) (pure [])
 
 -- λ> sequenceA [Just 3, Just 4, Just 5]
 -- Just [3,4,5]
 
--- another version of sequence using monad
+-- | another version of sequence using monad
 mseq :: (Monad m) => [m a] -> m [a]
 mseq [] = return []
 mseq (x : xs) = do
@@ -259,7 +265,7 @@ mseq (x : xs) = do
      ys <- mseq xs
      return (y : ys)
 
--- without the do notation
+-- | without the do notation
 mseq' :: (Monad m) => [m a] -> m [a]
 mseq' []       = return []
 mseq' (x : xs) = x >>= (\y -> mseq' xs >>= \ys -> return (y : ys))
@@ -268,11 +274,11 @@ applyMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
 applyMaybe Nothing _  = Nothing
 applyMaybe (Just x) f = f x
 
--- knight's quest
--- depict knight's current position (col, row)
+-- | A knight's quest
+--   depict knight's current position (col, row)
 type Knight = (Int, Int)
 
--- list of all positions to which a knight can move
+-- | list of all positions to which a knight can move
 knightMove :: Knight -> [Knight]
 knightMove (c, r) = do
            (col, row) <- [(c + 2, r + 1), (c + 2, r - 1), (c - 2, r + 1), (c - 2, r - 1)
@@ -280,42 +286,42 @@ knightMove (c, r) = do
            guard (col `elem` [1 .. 8] && row `elem` [1 .. 8])
            return (col, row)
 
--- all positions to which a knight can land in X moves
+-- | all positions to which a knight can land in X moves
 in3 :: Knight -> [Knight]
 in3 start = do
     first <- knightMove start
     second <- knightMove first
     knightMove second
 
--- same in monadic way
+-- | same in monadic way
 in3' :: Knight -> [Knight]
 in3' start = knightMove start >>= knightMove >>= knightMove
 
--- check that the knight can move from start to end positions in n moves
+-- | check that the knight can move from start to end positions in n moves
 canReach3 :: Knight -> Knight -> Bool
 canReach3 start end = end `elem` in3 start
 
 -----------------------------------------------------------------------------------
---
--- Probability Tables for Event and Probability
--- define type system for events and probabilities
+-- | Tossing a Coin (H/T)
+--   Probability Tables for Event and Probability
+--   define type system for events and probabilities
 type Events = [String]
 type Probabilities = [Double]
 
 data  ProbabilityTable = ProbabilityTable Events Probabilities
 
--- create a probability table ensuring that sum of probabilities is 1
+-- | create a probability table ensuring that sum of probabilities is 1
 crtProTable :: Events -> Probabilities -> ProbabilityTable
 crtProTable events probabilities = ProbabilityTable events normalizedP
    where
      totalP = sum probabilities
      normalizedP = map (/ totalP) probabilities
 
--- create a string for showing single event and probability
+-- | create a string for showing single event and probability
 showPair :: String -> Double -> String
 showPair event probability = mconcat [event, " | ", show probability, "\n"]
 
--- now make the ProbabilityTable an instance of Show
+-- | now make the ProbabilityTable an instance of Show
 instance Show ProbabilityTable where
   show (ProbabilityTable events probabilities) = mconcat pairs
     where
@@ -325,18 +331,20 @@ instance Show ProbabilityTable where
 -- Heads|0.5
 -- Tails|0.5
 
--- cartesian product for clubbing probablities from multiple events
+-- | cartesian product for clubbing probablities from multiple events
 cartesianCombination :: (a -> b -> c) -> [a] -> [b] -> [c]
 cartesianCombination f l1 l2 = zipWith f newL1 cycledL2
                                where
-                                 -- repeat each elem init first forM each init second
+                                 -- repeat each elem in the first list for
+                                 -- each elem in the second list
                                  nToAdd = length l2
                                  -- make nToAdd copies of element
                                  repeatedL1 = map (replicate nToAdd) l1
                                  newL1 = mconcat repeatedL1
+                                 -- cycle second list so that it can be combined with first
                                  cycledL2 = cycle l2
 
--- combine events and combine probablitites
+-- | functions for combining events and combine probablitites
 combineEvents :: Events -> Events -> Events
 combineEvents = cartesianCombination func
                 where
@@ -345,7 +353,7 @@ combineEvents = cartesianCombination func
 combineProbs :: Probabilities -> Probabilities -> Probabilities
 combineProbs = cartesianCombination (*)
 
--- Make ProbabilityTable an instance of Semigroup
+-- | Make ProbabilityTable an instance of Semigroup
 instance Semigroup ProbabilityTable where
   ptable1 <> (ProbabilityTable [] [])                  = ptable1
   (ProbabilityTable [] []) <> ptable2                  = ptable2
@@ -354,17 +362,17 @@ instance Semigroup ProbabilityTable where
       newEvents = combineEvents e1 e2
       newProbabilities = combineProbs p1 p2
 
--- Make ProbabilityTable an instance of Monoid
+-- | Make ProbabilityTable an instance of Monoid
 instance Monoid ProbabilityTable where
   mempty = ProbabilityTable [] []
   mappend = (<>)
   -- not required to implement for mconcat
 
--- testing with a fair coin
+-- | testing with a fair coin
 coin :: ProbabilityTable
 coin = crtProTable ["Heads", "Tails"] [0.5, 0.5]
 
--- a color spinner with various probabilities for each spinner
+-- | a color spinner with various probabilities for each spinner
 spinner :: ProbabilityTable
 spinner = crtProTable ["Red", "Blue", "Green"] [0.3, 0.2, 0.5]
 

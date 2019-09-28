@@ -1,33 +1,95 @@
-name:                Haskercises
-version:             0.1.0.0
-synopsis:            Multiple general exercises and examples worked in Haskell
-description:         Please see README.md
-homepage:            https://github.com/githubuser/Haskercises#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Sampath Singamsetty
-maintainer:          Singamsetty.Sampath@gmail.com
-copyright:
-category:            Web
-build-type:          Simple
-cabal-version:       >=1.10
+cabal-version: 1.12
 
-executable exercises
-  hs-source-dirs:      src
-  main-is:             Main.hs
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5,
-                       time >= 1.6.0.1,
-                       containers >= 0.5,
-                       mtl >= 2.2.1,
-                       split,
-                       aeson >= 0.11.2.1,
-                       aeson-pretty >= 0.8.2,
-                       bytestring >= 0.10.8.1,
-                       text >= 1.2.2.1,
-                       random,
-                       QuickCheck >= 2.8.2
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 55a319438bce23552283e4d5247ecaee774d672728d45230b2d56f2e768ccf95
+
+name:           Haskercises
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/fpdevil/Haskercises#readme>
+homepage:       https://github.com/fpdevil/Haskercises#readme
+bug-reports:    https://github.com/fpdevil/Haskercises/issues
+author:         Sampath Singamsetty
+maintainer:     Singamsetty@Sampath@gmail.com
+copyright:      (c) 2019
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
 
 source-repository head
-  type:     git
-  location: https://github.com/singamsetty/haskercises
+  type: git
+  location: https://github.com/fpdevil/Haskercises
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_Haskercises
+  hs-source-dirs:
+      src
+  build-depends:
+      QuickCheck
+    , aeson
+    , aeson-pretty
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , mtl
+    , random
+    , split
+    , text
+    , time
+  default-language: Haskell2010
+
+executable Haskercises-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_Haskercises
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Haskercises
+    , QuickCheck
+    , aeson
+    , aeson-pretty
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , mtl
+    , random
+    , split
+    , text
+    , time
+  default-language: Haskell2010
+
+test-suite Haskercises-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_Haskercises
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Haskercises
+    , QuickCheck
+    , aeson
+    , aeson-pretty
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , mtl
+    , random
+    , split
+    , text
+    , time
+  default-language: Haskell2010

@@ -8,22 +8,13 @@ File       : Haskercise10.hs
 Description: General exrcises and problems in Haskell
 -}
 
-module Haskercise16
+module Haskercise17
     (
-    IsList(..),
-    accept,
-    number,
-    identifier,
-    operator,
-    term,
-    parse,
-    tokenize,
-    main
+    IsList(..)
    )
 where
 
 import qualified Data.Char as C
-
 -----------------------------------------------------------------------------------
 class IsList l where
     -- | `Item` type function returnsn the type of the structure
@@ -44,10 +35,9 @@ instance IsList [a] where
     fromList        = id
     toList          = id
 
---
--- A NonEmpty list is a list which always has at least one element, but is
--- otherwise identical to the traditional list type in terms of complexity
--- and API.
+-- | A NonEmpty list is a list which always has at least one element, but is
+--   otherwise identical to the traditional list type in terms of complexity
+--   and API.
 data NonEmpty a = a :| [a]
     deriving (Eq, Ord, Show, Read)
 
@@ -56,148 +46,37 @@ instance IsList (NonEmpty a) where
     fromList               = fromList
     toList                 = toList
 -----------------------------------------------------------------------------------
--- parser for a calculator
--- define data type for Operator
-data Operator = Plus
-              | Minus
-              | Multiply
-              | Divide
-              deriving (Eq, Show)
+-- | Blood groups
+--   A,B,O blood type can have 4 values A, B, AB, O which is the family of
+--   antibodies within ones blood.
+--   + / - part of the blood refers to Rhesus group (Rh type) which is the
+--   presence or absence of particular antigen
+data RhType = Pos | Neg
 
--- define a data type for handling the individual tokens
-data Token = TokenOp Operator
-           | TokenAssign
-           | TokenLeftParen
-           | TokenRightParen
-           | TokenId String
-           | TokenNum Double
-           | TokenEnd
-           deriving (Show, Eq)
+data ABOType = A |B | AB | O
 
-{-
-a formal description of the grammar to be followed for parsing the expression
+data BloodType = BloodType ABOType RhType
 
-Expression <- Term [+ | -] Expression
-            | Identifier '=' Expression
-            | Term
-Term       <- Factor [* | /] Term
-            | Factor
-Factor     <- Number
-            | Identifier
-            | [+ | -] Factor
-            | '(' Expression ')'
--}
+showRh :: RhType -> String
+showRh Pos = "+ve"
+showRh Neg = "-ve"
 
--- a function for parsing the individual operators
-operator :: Char -> Operator
-operator c
-  | c == '+' = Plus
-  | c == '-' = Minus
-  | c == '*' = Multiply
-  | c == '/' = Divide
+showABO :: ABOType -> String
+showABO A  = "A"
+showABO B  = "B"
+showABO AB = "AB"
+showABO O  = "O"
 
--- tokenizing the String input
-tokenize :: String -> [Token]
-tokenize (c : cs)
-  | c `elem` "+-*/" = TokenOp (operator c) : tokenize cs
-  | c == '=' = TokenAssign : tokenize cs
-  | c == '(' = TokenLeftParen : tokenize cs
-  | c == ')' = TokenRightParen : tokenize cs
-  | C.isDigit c = number c cs
-  | C.isAlpha c = identifier c cs
-  | C.isSpace c = tokenize cs
-  | otherwise = error $ "Cannot tokenize " ++ [c]
+showBloodType :: BloodType -> String
+showBloodType (BloodType abo rh) = showABO abo ++ showRh rh
 
--- helper functions
-number :: Char -> String -> [Token]
-number c cs = let (digits, numlist) = span C.isDigit cs
-              in TokenNum (read (c : digits)) : tokenize numlist
+-- | check who can donate blood to whom
+canDonateTo :: BloodType -> BloodType -> Bool
+canDonateTo (BloodType O _) _               = True        -- O can donate to anyone
+canDonateTo _ (BloodType AB _)              = True        -- AB can receive from anyone
+canDonateTo (BloodType A _) (BloodType A _) = True        -- A can donate/receive A
+canDonateTo (BloodType B _) (BloodType B _) = True        -- B can donate/receive B
+canDonateTo _ _                             = False
 
-identifier :: Char -> String -> [Token]
-identifier c cs = let (val, ids) = span C.isAlphaNum cs
-                  in TokenId (c : val) : tokenize ids
-
--- parsing the expression, by considering it as a Tree
-data Tree = SumNode Operator Tree Tree
-          | ProdNode Operator Tree Tree
-          | AssignmentNode String Tree
-          | UnaryNode Operator Tree
-          | NumNode Double
-          | VarNode String
-          deriving (Show)
-
--- helper function for Tree
-lookAhead :: [Token] -> Token
-lookAhead ts = if null ts then TokenEnd else head ts
-
-accept :: [Token] -> [Token]
-accept ts = if null ts then error "Nothing to accept" else tail ts
-
-expression :: [Token] -> (Tree, [Token])
-expression tokens = let (termTree, restOfTokens) = term tokens
-                    in
-                     case lookAhead restOfTokens of
-                       (TokenOp op)
-                         | op `elem` [Plus, Minus] -> let (exprTree, remTokens) = expression (accept restOfTokens)
-                                                     in (SumNode op termTree exprTree, remTokens)
-                       TokenAssign ->
-                         case termTree of
-                           VarNode str -> let (exprTree, remTokens) = expression (accept restOfTokens)
-                                         in (AssignmentNode str exprTree, remTokens)
-                           _ -> error "Only variables can be assigned to"
-                       _ -> (termTree, restOfTokens)
-
-term :: [Token] -> (Tree, [Token])
-term tokens = let (factorTree, restOfTokens) = factor tokens
-              in
-               case lookAhead restOfTokens of
-                 (TokenOp op)
-                   | op `elem` [Multiply, Divide] -> let (termTree, remTokens) = term (accept restOfTokens)
-                                                    in (ProdNode op factorTree termTree, remTokens)
-                 _ -> (factorTree, restOfTokens)
-
-factor :: [Token] -> (Tree, [Token])
-factor tokens = case lookAhead tokens of
-                  (TokenNum x) -> (NumNode x, accept tokens)
-                  (TokenId str) -> (VarNode str, accept tokens)
-                  (TokenOp op)
-                    | op `elem` [Plus, Minus] -> let (factorTree, restOfTokens) = factor (accept tokens)
-                                                in (UnaryNode op factorTree, restOfTokens)
-                  TokenLeftParen -> let (exprTree, restOfTokens) = expression (accept tokens)
-                                   in
-                                    if lookAhead restOfTokens /= TokenRightParen
-                                    then error "Missing right parenthesis"
-                                    else (exprTree, accept restOfTokens)
-                  _ -> error $ "Parse error on token: " ++ show tokens
-
-parse :: [Token] -> Tree
-parse tokens = let (tree, restOfTokens) = expression tokens
-               in
-                if null restOfTokens
-                then tree
-                else error $ "Leftover tokens: " ++ show restOfTokens
-
-evaluate :: Tree -> Double
-evaluate (SumNode op left right) = let lft = evaluate left
-                                       rgt = evaluate right
-                                   in
-                                    case op of
-                                      Plus  -> lft + rgt
-                                      Minus -> lft - rgt
-evaluate (ProdNode op left right) = let lft = evaluate left
-                                        rgt = evaluate right
-                                    in
-                                     case op of
-                                       Multiply -> lft * rgt
-                                       Divide   -> lft / rgt
-evaluate (UnaryNode op tree) = let x = evaluate tree
-                               in
-                                case op of
-                                  Plus  -> x
-                                  Minus -> -x
-evaluate (NumNode x) = x
-evaluate (AssignmentNode _ tree) = evaluate tree
-evaluate (VarNode _) = 0
-
-main :: IO ()
-main = (print . evaluate . parse . tokenize) "x = -12 / (3 + y)"
+xor :: Bool -> Bool -> Bool
+xor v1 v2 = (v1 || v2) && not (v1 && v2)

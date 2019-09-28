@@ -34,3 +34,6 @@ that still have to cross the bridge
 The problem now is: In which order  can the four toys cross the bridge
 in time (that is, with in 60 minutes) to be saved from Zurg?
 -}
+
+-- TODO:
+-- implement logic pending...

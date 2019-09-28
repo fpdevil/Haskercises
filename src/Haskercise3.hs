@@ -44,7 +44,7 @@ import           Prelude             hiding (mapM, mapM_, sequence, sequenceA,
                                       sequence_)
 
 -----------------------------------------------------------------------------------
--- Sheep cloning experiment
+-- | Sheep cloning experiment
 -----------------------------------------------------------------------------------
 -- definitions and type declarations
 -- type Sheep = String
@@ -60,26 +60,26 @@ data Sheep = Sheep { name   :: String
                    , father :: Maybe Sheep
                    } deriving Show
 
--- parent sheep (father or mother) as a Maybe Monad
+-- | parent sheep (father or mother) as a Maybe Monad
 parentM :: Sheep -> Maybe Sheep
 parentM sh = father sh `mplus` mother sh
 
--- parent sheep as a List Monad
+-- | parent sheep as a List Monad
 parentL :: Sheep -> [Sheep]
 parentL sh = maybeToList (mother sh) `mplus` maybeToList (father sh)
 
--- if the type definition of the Sheep is changed including MonadPlus
--- then the definition is applicable for both Maybe as well  as List
--- helper function for converting to Monad
+-- | if the type definition of the Sheep is changed including MonadPlus
+--   then the definition is applicable for both Maybe as well  as List
+--   helper function for converting to Monad
 toMonad :: (MonadPlus m) => Maybe a -> m a
 toMonad Nothing  = mzero
 toMonad (Just x) = return x
 
--- parent of the sheep using MonadPlus
+-- | parent of the sheep using MonadPlus
 parent :: (MonadPlus m) => Sheep -> m Sheep
 parent sh = toMonad (father sh) `mplus` toMonad (mother sh)
 
--- build the sheep family tree for dolly
+-- | build the sheep family tree for dolly
 sheepFamily :: Sheep
 sheepFamily = let adam   = Sheep "Adam" Nothing Nothing
                   eve    = Sheep "Eve" Nothing Nothing
@@ -93,15 +93,15 @@ sheepFamily = let adam   = Sheep "Adam" Nothing Nothing
                Sheep "Dolly" (Just molly) Nothing
 
 
--- since the sheep is cloned, it may not always have mother and father
--- define a function which can combine operations to return a Maybe
+-- | since the sheep is cloned, it may not always have mother and father
+--   define a function which can combine operations to return a Maybe
 apply :: Maybe a -> (a -> Maybe b) -> Maybe b
 apply Nothing _  = Nothing
 apply (Just x) f = f x
 
 
--- Naive implementations
--- now maternal grand father can be defined using above apply function
+-- | Naive implementations
+--   now maternal grand father can be defined using above apply function
 maternalGrandFatherNaive :: Sheep -> Maybe Sheep
 maternalGrandFatherNaive sh = Just sh `apply` mother `apply` father
 
@@ -111,20 +111,20 @@ fathersMaternalGrandMotherNaive sh = Just sh `apply` father `apply` mother `appl
 mothersPaternalGrandFatherNaive :: Sheep -> Maybe Sheep
 mothersPaternalGrandFatherNaive sh = Just sh `apply` mother `apply` father `apply` father
 
--- print dolly's maternal grand father
+-- | print dolly's maternal grand father
 showDollyMaternalGrandfather :: IO ()
 showDollyMaternalGrandfather = let dolly = sheepFamily
                                in
                                print (maternalGrandFatherNaive dolly)
 
 
--- since Maybe is already an instance of Monad, we can use the standard haskell
--- monad operators to build complex operations
+-- | since Maybe is already an instance of Monad, we can use the standard haskell
+--   monad operators to build complex operations
 maternalGrandFather :: Sheep -> Maybe Sheep
 maternalGrandFather sh = mother sh >>= father
 
--- simplified using the left identity law of Monads
--- maternalGrandFather sh = return sh >>= mother >>= father
+-- | simplified using the left identity law of Monads
+--   maternalGrandFather sh = return sh >>= mother >>= father
 
 paternalGrandFather :: Sheep -> Maybe Sheep
 paternalGrandFather sh = father sh >>= father
@@ -141,22 +141,20 @@ fathersMaternalGrandMother sh = father sh >>= mother >>= mother
 mothersPaternalGrandFather :: Sheep -> Maybe Sheep
 mothersPaternalGrandFather sh = mother sh >>= father >>= father
 
--- grand parents of sheep
+-- | grand parents of sheep
 grandparent :: Sheep -> Maybe Sheep
 grandparent sh = paternalGrandMother sh `mplus`
                  paternalGrandFather sh `mplus`
                  maternalGrandMother sh `mplus`
                  maternalGrandFather sh
 
--- grand parents interms of list
+-- | grand parents interms of list
 grandparentL :: Sheep -> [Sheep]
 grandparentL sh = parentL sh >>= parentL
 
--- some standard haskell functions redefined
--- sequence
--- this function  takes a list of  wrapped computations, executes each  one in turn
--- and then returns a list of results
--- using do notation
+-- | some standard haskell functions redefined  .. sequence
+--   this function  takes a list of  wrapped computations, executes each
+--   one in turn and then returns a list of results using do notation
 sequenceDo :: (Monad m) => [m a] -> m [a]
 sequenceDo [] = return []
 sequenceDo (x : xs) = do
@@ -165,7 +163,7 @@ sequenceDo (x : xs) = do
     return (y : ys)
 
 
---without the do notation in a monadic way
+-- | without the do notation in a monadic way
 sequence :: (Monad m) => [m a] -> m [a]
 sequence []       = return []
 sequence (x : xs) = x >>= \y -> sequence xs >>= \ys -> return (y : ys)
@@ -173,7 +171,7 @@ sequence (x : xs) = x >>= \y -> sequence xs >>= \ys -> return (y : ys)
 -- λ> sequence [Just 1, Just 2, Just 3]
 --    Just [1, 2, 3]
 
--- sequence function written using the Applicative functor
+-- | sequence function written using the Applicative functor
 sequenceA :: (Applicative f) => [f a] -> f [a]
 sequenceA []       = pure []
 -- sequenceA (x : xs) = pure (:) <*> x <*> sequenceA xs
@@ -186,10 +184,10 @@ sequenceA (x : xs) = foldr (\x -> (<*>) ((:) <$> x)) (pure []) xs
 -- 3
 -- [(), (), ()]
 
--- sequence_
--- this function has same behaviour as sequence, but it does not
--- return the list of results. useful only when side effects of
--- monadic computing are important
+-- | sequence_
+--   this function has same behaviour as sequence, but it does not
+--   return the list of results. useful only when side effects of
+--   monadic computing are important
 sequence_ :: (Monad m) => [m a] -> m ()
 sequence_ = foldr (>>) (return ())
 
@@ -203,9 +201,9 @@ sequence_ = foldr (>>) (return ())
 -- 2
 -- 3
 
--- mapping functions
--- mapM - this function maps a monadic computation over a list of
--- values and returns back list of results
+-- | mapping functions
+--   mapM - this function maps a monadic computation over a list of
+--   values and returns back list of results
 mapM :: (Monad m) => (a -> m b) -> [a] -> m [b]
 mapM f xs = sequence (map f xs)
 
@@ -228,9 +226,9 @@ mapM_ f xs = sequence_ (map f xs)
 -- 2
 -- 3
 
--- monadic version of fold function
--- foldM - this function is a monadic version of foldl in which
--- monadic computations built from a list are bound left-to-right
+-- | monadic version of fold function
+--   foldM - this function is a monadic version of foldl in which
+--   monadic computations built from a list are bound left-to-right
 foldM :: (Monad m) => (b -> a -> m b) -> b -> [a] -> m b
 foldM _ acc []       = return acc
 foldM f acc (x : xs) = f acc x >>= \y -> foldM f y xs
@@ -238,13 +236,13 @@ foldM f acc (x : xs) = f acc x >>= \y -> foldM f y xs
 -- λ> foldM (\x y -> [y] : [x]) [] [1,2,3]
 --     [[3], [2], [3], [1], [3], [2], [3], []]
 
--- foldM_ - it is same as foldM, but discards results
+-- | foldM_ - it is same as foldM, but discards results
 foldM_ :: (Monad m) => (b -> a -> m b) -> b -> [a] -> m ()
 foldM_ f acc xs = void (foldM f acc xs)
 -- foldM_ f acc xs = foldM f acc xs >> return ()
 
 
--- an example implementation using foldM
+-- | an example implementation using foldM
 showFM :: (Integral a, Show a) => a -> IO a
 showFM n = foldM (\x y ->
                     putStrLn (show x ++ " + " ++ show y ++ " = " ++ show (x + y))
@@ -258,18 +256,17 @@ showFM n = foldM (\x y ->
 -- 10 + 5 = 15
 -- 15
 
--- define a function to trace the ancestor(s) of a sheep
+-- | define a function to trace the ancestor(s) of a sheep
 traceSheep :: Sheep -> [Sheep -> Maybe Sheep] -> Maybe Sheep
 traceSheep = foldM getAncestor
              where
                 getAncestor s f = f s
 
--- redefining the above using builtin flip and Monads
+-- | redefining the above using builtin flip and Monads
 traceFamily :: (Monad m) => [Sheep -> m Sheep] -> Sheep -> m Sheep
 traceFamily ancestorList sh = foldM (flip ($)) sh ancestorList
 
---
--- some complex queries using the trace functions
+-- | some complex queries using the trace functions
 paternalGrandMotherT :: Sheep -> Maybe Sheep
 paternalGrandMotherT = traceFamily [father, mother]
 
@@ -291,7 +288,8 @@ mothersMaternalGrandFatherT = traceFamily [mother, mother, father]
 mothersPaternalGreatGrandFatherT :: Sheep -> Maybe Sheep
 mothersPaternalGreatGrandFatherT = traceFamily [mother, father, father, father]
 
--- testing using the above functions
+
+-- | testing using the above functions
 -- λ> let dolly = sheepFamily
 -- λ> paternalGrandMotherT dolly
 -- Nothing
@@ -302,10 +300,10 @@ mothersPaternalGreatGrandFatherT = traceFamily [mother, father, father, father]
 -- λ> mothersPaternalGreatGrandFatherT dolly
 -- Just (Sheep {name = "Uranus", mother = Nothing, father = Nothing})
 
--- filterM function
--- this function works similar to  filter function but in Monadic Context
--- it takes a predicate which returns a boolean value in Monad and a list
--- of values; returns list of values inside Monad which satisfy predicate
+-- | filterM function
+--   this function works similar to  filter function but in Monadic Context
+--   it takes a predicate which returns a boolean value in Monad and a list
+--   of values; returns list of values inside Monad which satisfy predicate
 filterM :: (Monad m) => (a -> m Bool) -> [a] -> m [a]
 filterM _ [] = return []
 filterM p (x : xs) = p x >>= \y -> filterM p xs >>=
@@ -317,17 +315,17 @@ filterM p (x : xs) = p x >>= \y -> filterM p xs >>=
 -- λ> filterM (\_ -> [True, False]) [1,2,3]
 -- [[1,2,3],[1,2],[1,3],[1],[2,3],[2],[3],[]]
 
--- There are 2 functions for conditional execution of monadic computations
--- when ; this function takes a boolean and a monadic computation with ()
--- and performs the computation only when boolean argument is true
+-- | There are 2 functions for conditional execution of monadic computations
+--   when ; this function takes a boolean and a monadic computation with ()
+--   and performs the computation only when boolean argument is true
 when :: (Monad m) => Bool -> m () -> m ()
 when f x = if f
             then x
             else return ()
 
 
--- unless ; does the same as above except that it performs computation
--- unless the boolean argument is false
+-- | unless ; does the same as above except that it performs computation
+--   unless the boolean argument is false
 unless :: (Monad m) => Bool -> m () -> m ()
 unless f = when (not f)
 
@@ -339,30 +337,30 @@ unless f = when (not f)
 -- λ> let simulation = False in unless simulation (putStrLn "Launching Ariane 5 now")
 -- Launching Ariane 5 now
 
--- zipWithM is the monadic version of zipWith over lists
+-- | zipWithM is the monadic version of zipWith over lists
 zipWithM :: (Monad m) => (a -> b -> m c) -> [a] -> [b] -> m [c]
 zipWithM f xs ys = sequence (zipWith f xs ys)
 
--- zipWithM_ works same as zipWithM but ignores the output, which is useful when
--- side effects needs to be considered
+-- | zipWithM_ works same as zipWithM but ignores the output, which is useful when
+--   side effects needs to be considered
 zipWithM_ :: (Monad m) => (a -> b -> m c) -> [a] -> [b] -> m ()
 zipWithM_ f xs ys = sequence_ (zipWith f xs ys)
 
--- ap and lifting functions
--- lifting is an operation to convert non monadic function into an equivalent
--- function that operates on monadic values; essentially it applies a function
--- to a wrapped value and returns a wrapped value similar to fmap
+-- | ap and lifting functions
+--   lifting is an operation to convert non monadic function into an equivalent
+--   function that operates on monadic values; essentially it applies a function
+--   to a wrapped value and returns a wrapped value similar to fmap
 lift :: (Monad m) => (a -> b) -> m a -> m b
 lift f xs = xs >>= \y -> return (f y)
 
 -- λ> lift (+2) (Just 3)
 -- Just 5
 
--- higher order lifting
+-- | higher order lifting
 lift2 :: (Monad m) => (a -> b -> c) -> m a -> m b -> m c
 lift2 f x y = x >>= \z1 -> y >>= \z2 -> return (f z1 z2)
 
--- create a new operator ?- to subtract numbers encapsulated in monads:
+-- | create a new operator ?- to subtract numbers encapsulated in monads:
 -- λ> let (?-) = lift2 (-) in Just 3 ?- (Just 2)
 -- Just 1
 --
@@ -371,13 +369,13 @@ lift2 f x y = x >>= \z1 -> y >>= \z2 -> return (f z1 z2)
 -- λ> let (?*) = lift2 (*) in Just 3 ?* Nothing
 -- Nothing
 
--- ap
--- this applies a function inside a monad to a value inside a monad
--- of the same type; a  call to liftN can often be replaced by one
--- or more calls to ap
--- return f `ap` x1 `ap` ... `ap` xn
--- is equivalent to
--- liftN x1 x2 x3 ... xn
+-- | ap
+--   this applies a function inside a monad to a value inside a monad
+--   of the same type; a  call to liftN can often be replaced by one
+--   or more calls to ap
+--   return f `ap` x1 `ap` ... `ap` xn
+--   is equivalent to
+--   liftN x1 x2 x3 ... xn
 ap :: (Monad m) => m (a -> b) -> m a -> m b
 ap = lift2 ($)
 
@@ -386,7 +384,7 @@ ap = lift2 ($)
 -- λ> Just (*) `ap` (Just 2) `ap` (Just 3)
 -- Just 6
 
--- conditional execution using guard function
+-- | conditional execution using guard function
 guard :: (MonadPlus m) => Bool -> m ()
 guard True  = return ()
 guard False = mzero
@@ -394,21 +392,21 @@ guard False = mzero
 -- λ> [1..100] >>= \x -> guard ('3' `elem` show x) >> return x
 -- [3,13,23,30,31,32,33,34,35,36,37,38,39,43,53,63,73,83,93]
 
--- join function
+-- | join function
 join :: (Monad m) => m (m a) -> m a
 join x = x >>= id
 
 -- λ> join (Just (Just 2))
 -- Just 2
 
--- return a list containing the result of folding the binary operator through
--- all combinations of elements of given lists
+-- | return a list containing the result of folding the binary operator through
+--   all combinations of elements of given lists
 allCombinations :: (a -> a -> a) -> [[a]] -> [a]
 allCombinations _ []       = []
 allCombinations f (x : xs) = foldl (liftM2 f) x xs
 
 -----------------------------------------------------------------------------------
--- The Identity Functor, Applicative and Monad
+-- | The Identity Functor, Applicative and Monad
 -----------------------------------------------------------------------------------
 newtype Identity a = Identity { runIdentity :: a }
 

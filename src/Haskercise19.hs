@@ -82,6 +82,11 @@ main = (T.unpack . TE.decodeUtf8 . BL.toStrict) <$> getJSON >>= putStrLn
 --
 type Bit = Int
 
+unfold :: (a -> Bool) -> (a -> b) -> (a -> a) -> a -> [b]
+unfold p f g x
+  | p x = []
+  | otherwise = f x : unfold p f g (g x)
+
 bin2int :: [Bit] -> Int
 bin2int bits = sum [w * b | (w, b) <- zip weights bits]
     where
@@ -102,12 +107,27 @@ bin2int bits = sum [w * b | (w, b) <- zip weights bits]
 binary2int :: [Bit] -> Int
 binary2int = foldr (\x y -> x + 2 * y) 0
 
+-- converting an integer to any base
+int2base :: Int -> Int -> [Int]
+int2base 0 _ = []
+int2base n base = y : int2base x base
+                  where
+                    (x, y) = n `divMod` base
+
 -- converting integer to binary
 int2bin :: Int -> [Bit]
-int2bin 0 = []
-int2bin n = y : int2bin x
-    where
-        (x, y) = n `divMod` 2
+int2bin n = int2base n 2
+
+-- using unfold
+int2bin' :: Int -> [Bit]
+int2bin' = unfold (== 0) (`mod` 2) (`div` 2)
+
+int2hex :: Int -> String
+int2hex n = map (C.toUpper . C.intToDigit) $ int2base n 16
+
+-- decimal number (as list) to integer conversion
+dec2int :: [Int] -> Int
+dec2int xs = foldr (\x y -> x + 10 * y) 0 (reverse xs)
 
 -- we may ensure that the binary numbers are of length 8 bits rather than any
 -- arbitrary length, by defining a function make8, which can either extend or
@@ -196,7 +216,7 @@ ballots = [["tulips", "bees"],
 rmempty :: (Eq a) => [[a]] -> [[a]]
 rmempty = filter (/= [])
 
--- eliminate a given candidate fromChunks each ballot
+-- eliminate a given candidate from each ballot
 elim :: (Eq a) => a -> [[a]] -> [[a]]
 elim x = map (filter (/= x))
 
@@ -216,3 +236,50 @@ winner' bs = case rank (rmempty bs) of
 
 -- λ> winner' ballots
 -- "apples"
+
+-----------------------------------------------------------------------------------
+-- pascals triangle
+-- get the value of pascal's triangle at a row and a column
+--
+pascalV :: (Integral a) => a -> a -> a
+pascalV 0 _ = 1
+pascalV _ 0 = 1
+pascalV row col
+  | row == col = 1
+  | col > row = error "column exceeds row!"
+  | otherwise = pascalV (row - 1) (col - 1) + pascalV (row - 1) col
+
+-- calculating the whole triangle instead of a single value
+-- a helper function for adding each successive pairs of values in a list
+--
+addSucc :: (Integral a) => [a] -> [a]
+addSucc []           = []
+addSucc [_]          = []
+addSucc (x : y : zs) = (x + y) : addSucc (y : zs)
+
+-- get the next row of pascal's triangle based on the previous row
+--
+nextR :: (Integral a) => [a] -> [a]
+nextR xs = 1 : addSucc xs ++ [1]
+
+-- get the actual pascal's triangle from an infinite list
+pascalsList :: [[Integer]]
+pascalsList = aux [1]
+    where
+        aux xs = xs : aux (nextR xs)
+
+pascalsT :: Int -> IO ()
+pascalsT n = mapM_ print (take n pascalsList)
+
+-- λ> pascalsT 5
+-- [1]
+-- [1,1]
+-- [1,2,1]
+-- [1,3,3,1]
+-- [1,4,6,4,1]
+
+-- a one liner
+pascal :: [[Integer]]
+pascal = iterate (\previous -> 1 : zipWith (+) previous (tail previous) ++ [1]) [1]
+
+

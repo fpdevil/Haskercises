@@ -6,8 +6,8 @@ Description: General exercises with Monads in Haskell.
              learning by re-implementing the standard monads
 -}
 
-import Control.Applicative
-import Data.Monoid
+import           Control.Applicative
+import           Data.Monoid
 
 -----------------------------------------------------------------------------------
 -- Writer Monad
@@ -67,6 +67,10 @@ clear = Writer ((), mempty)
 -- listen m is an action that executes the action m and adds its output to the
 -- value of the computation. It listens to the acting monad and returns what
 -- the monad "said"
+-- `listen` gives  access to the log  produced by a Writer  action inside
+-- the Writer monad. It can be used to inspect what some sub-action wrote
+-- to the writer, before the value is appended to the writer state
+
 listen :: (Monoid w) => Writer w a -> Writer w (a, w)
 listen x = Writer ((a, w), w)
            where

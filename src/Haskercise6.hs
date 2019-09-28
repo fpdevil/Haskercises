@@ -13,16 +13,16 @@ import           Data.Char
 import           Data.Monoid
 import           Prelude
 -----------------------------------------------------------------------------------
--- example for  parsing data  into hex values,  decimal values  and words
--- containing only alpha-numeric characters
+-- | example for  parsing data  into hex values,  decimal values  and words
+--   containing only alpha-numeric characters
 
--- define a data type for parsing the 3 types
+-- | define a data type for parsing the 3 types
 data Parsed = Digit Integer
             | Hex Integer
             | Word String
             deriving Show
 
--- if a character is added to parsed representation of hex digit
+-- | if a character is added to parsed representation of hex digit
 parseHexDigit :: Parsed -> Char -> [Parsed]
 parseHexDigit (Hex i) c = if isHexDigit c
                              then return $ Hex ((i * 16) + toInteger (digitToInt c))

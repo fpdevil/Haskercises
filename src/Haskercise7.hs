@@ -37,6 +37,17 @@ info4 = [(26, 219.8), (27, 220.5), (28, 223.8), (29, 222.8),
 -- missing values in the TimeSeries is normally represented as NA
 data TimeSeries a = TimeSeries [Int] [Maybe a]
 
+-- make TimeSeries data an instance of Show
+instance (Show a) => Show (TimeSeries a) where
+  show (TimeSeries t v) = S.mconcat rows
+                          where
+                            rows = zipWith showTV t v
+
+-- a function for rendering the time/value pairs
+showTV :: (Show a) => Int -> Maybe a -> String
+showTV time (Just val) = S.mconcat [show time, " | ", show val, "\n"]
+showTV time Nothing    = S.mconcat [show time, " | NA\n"]
+
 -- take data and create time series from the same
 -- first get the fulltimes range of times from min to max
 crtTS :: [Int] -> [a] -> TimeSeries a
@@ -54,16 +65,6 @@ convertData tv = crtTS times vals
                    times = fst pairs
                    vals  = snd pairs
 
--- a function for rendering the time/value pairs
-showTV :: (Show a) => Int -> Maybe a -> String
-showTV time (Just val) = S.mconcat [show time, " | ", show val, "\n"]
-showTV time Nothing    = S.mconcat [show time, " | NA\n"]
-
--- make TimeSeries data an instance of Show
-instance (Show a) => Show (TimeSeries a) where
-  show (TimeSeries t v) = S.mconcat rows
-                          where
-                            rows = zipWith showTV t v
 
 -- convert all the data samples to the format compatible
 -- with the data type for TimeSeries
@@ -91,12 +92,12 @@ stitchTS :: TimeSeries a -> TimeSeries a -> TimeSeries a
 stitchTS (TimeSeries [] []) tseries2 = tseries2
 stitchTS tseries1 (TimeSeries [] []) = tseries1
 stitchTS (TimeSeries t1 v1) (TimeSeries t2 v2) = TimeSeries allTimes allVals
-                                                 where
-                                                   combinedTimes = mconcat [t1, t2]
-                                                   allTimes      = [(L.minimum combinedTimes) .. (L.maximum combinedTimes)]
-                                                   tvMap         = foldl insertMaybePair M.empty (zip t1 v1)
-                                                   updMap        = foldl insertMaybePair tvMap (zip t2 v2)
-                                                   allVals       = map (`M.lookup` updMap) allTimes
+  where
+    combinedTimes = mconcat [t1, t2]
+    allTimes      = [(L.minimum combinedTimes) .. (L.maximum combinedTimes)]
+    tvMap         = foldl insertMaybePair M.empty (zip t1 v1)
+    updMap        = foldl insertMaybePair tvMap (zip t2 v2)
+    allVals       = map (`M.lookup` updMap) allTimes
 
 
 -- make TimeSeries data an instance of Semigroup
@@ -115,7 +116,7 @@ tsAll = mconcat [ts1, ts2, ts3, ts4]
 
 -- summarizing the data sets; calculate the summary statistics for the
 -- data sets interms of finding mean / average value of the data, which
--- would help init finding the highest and lowest values init dataset.
+-- would help in finding the highest and lowest values in dataset.
 mean :: (Real a) => [a] -> Double
 mean xs = total / count
           where
@@ -132,3 +133,17 @@ meanTS (TimeSeries _ vals) = if all (== Nothing) vals
                                        justVals = filter isJust vals
                                        allVals  = map fromJust justVals
                                        avg      = mean allVals
+
+-- comparing time series
+type CompareF a = (a -> a -> a)
+type TSCompareF a = ((Int, Maybe a) -> (Int, Maybe a) -> (Int, Maybe a))
+
+compareTS :: (Eq a) => CompareF a -> TSCompareF a
+compareTS fun = f
+  where
+    f (i1, Nothing) (i2, Nothing) = (i1, Nothing)
+    f (_, Nothing) (i, val)       = (i, val)
+    f (i, val) (_, Nothing)       = (i, val)
+    f (i1, Just v1) (i2, Just v2) = if fun v1 v2 == v1
+                                       then (i1, Just v1)
+                                       else (i2, Just v2)

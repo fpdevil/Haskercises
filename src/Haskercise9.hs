@@ -48,17 +48,17 @@ Inorder to test the logical validity of the statements wrt axioms, each
 of the 3 statemsnts can be realized as a function
 -}
 
--- declare data type for determining the Sex
+-- | declare data type for determining the Sex
 data Sex = Male | Female deriving (Show, Eq)
 
--- Solution to the puzzle can be in a record form
+-- | Solution to the puzzle can be in a record form
 data Puzzle = Puzzle { parent1           :: Sex
                      , parent2           :: Sex
                      , child             :: Sex
                      , child_description :: Sex
                      }
 
--- make Puzzle an instance of Show so that results are rendered
+-- | make Puzzle an instance of Show so that results are rendered
 instance Show Puzzle where
   show p = "Parent1 is " ++ show (parent1 p) ++ "\n" ++
            "Parent2 is " ++ show (parent2 p) ++ "\n" ++
@@ -152,6 +152,7 @@ solver sexuality_predicate = do
                   , child             = ch
                   , child_description = chdescr}
 
+-- | main method for printing the results
 main :: IO ()
 main = do
   putStrLn "//// Solution for Heterosexual Couples ////"
